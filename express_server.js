@@ -52,7 +52,6 @@ app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
-
 //create a new url submission
 app.post("/urls", (req, res) => {
   console.log(req.body.longURL); // Log the POST request body to the console
@@ -61,6 +60,18 @@ app.post("/urls", (req, res) => {
  
   res.redirect(`/urls/${newId}`); // Respond with 'Ok' (we will replace this)
 });
+app.post("/urls/:id/delete", (req, res) => {
+  delete urlDatabase[req.params.id];
+  res.redirect("/urls");
+});
+app.post("/urls/:id/delete", (req, res) => {
+  urlDatabase[req.params.id] = {
+    
+  }
+  res.redirect("/urls");
+});
+
+
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 
