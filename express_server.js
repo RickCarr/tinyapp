@@ -26,6 +26,10 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 //url shortener index
+app.get("/u/:id", (req, res) => {
+  const longURL = urlDatabase[req.params.id];
+  res.redirect(longURL);
+});
 
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
@@ -48,13 +52,17 @@ app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
+
 //create a new url submission
 app.post("/urls", (req, res) => {
-  console.log(req.body); // Log the POST request body to the console
-  res.send(generateRandomString()); // Respond with 'Ok' (we will replace this)
+  console.log(req.body.longURL); // Log the POST request body to the console
+  const newId = generateRandomString();
+  urlDatabase[newId] = `http://${req.body.longURL}`
+ 
+  res.redirect(`/urls/${newId}`); // Respond with 'Ok' (we will replace this)
 });
-
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
+
 
 });
