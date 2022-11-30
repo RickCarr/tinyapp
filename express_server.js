@@ -56,19 +56,17 @@ app.get("/urls.json", (req, res) => {
 app.post("/urls", (req, res) => {
   console.log(req.body.longURL); // Log the POST request body to the console
   const newId = generateRandomString();
-  urlDatabase[newId] = `http://${req.body.longURL}`
- 
+  urlDatabase[newId] = `http://${req.body.longURL}`;
+
   res.redirect(`/urls/${newId}`); // Respond with 'Ok' (we will replace this)
 });
 app.post("/urls/:id/delete", (req, res) => {
   delete urlDatabase[req.params.id];
   res.redirect("/urls");
 });
-app.post("/urls/:id/delete", (req, res) => {
-  urlDatabase[req.params.id] = {
-    
-  }
-  res.redirect("/urls");
+app.post("/urls/:id/edit", (req, res) => {
+  urlDatabase[req.params.id] = req.body.longURL;
+  res.redirect(/urls/);
 });
 
 
