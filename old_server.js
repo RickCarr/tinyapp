@@ -24,7 +24,7 @@ const generateRandomString = function() {
     randomChars += alphaNum.charAt(Math.floor(Math.random() * 62));
   }
   return randomChars;
-}
+};
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
@@ -55,7 +55,7 @@ app.get("/urls/new", (req, res) => {
 
 //page by id
 app.get("/urls/:id", (req, res) => {
-  console.log("this string")
+  console.log("this string");
   const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id], username: req.cookies["username"] };
   res.render("urls_show", templateVars);
 });
@@ -94,13 +94,13 @@ app.post("/urls/:id/edit", (req, res) => {
 });
 
 //login
-app.post("/login", (req, res) => {  
-  res.cookie("username", req.body.username);  
+app.post("/login", (req, res) => {
+  res.cookie("username", req.body.username);
   res.redirect("/urls");
 });
 //logout
-app.post("/logout", (req, res) => {  
-res.clearCookie("username");  
+app.post("/logout", (req, res) => {
+  res.clearCookie("username");
   res.redirect("/urls");
 });
 

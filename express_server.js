@@ -55,8 +55,6 @@ const existing = function(email) {
 
 //register get
 app.get("/register", (req, res) => {
-  const email = req.body.email;
-  const password = req.body.password;
   const templateVars = { user: users[req.cookies.user_id] };
   res.render('register', templateVars);
 });
@@ -93,10 +91,10 @@ app.post("/login", (req, res) => {
   if (!existing(email)) {
     return res.status(403).send('email is not yet registered');
   }
-    if (password !== existing(email).password) {
-      return res.status(403).send('incorrect password');
-    }
-  
+  if (password !== existing(email).password) {
+    return res.status(403).send('incorrect password');
+  }
+
   res.cookie('user_id', req.body.user_id);
   res.redirect('/urls');
 });
@@ -115,7 +113,6 @@ app.get("/urls", (req, res) => {
 
 //url shortener index
 app.get("/u/:id", (req, res) => {
-  const templateVars = { user: users[req.cookies.user_id] };
   const longURL = urlDatabase[req.params.id];
   res.redirect(longURL);
 });
