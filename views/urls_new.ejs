@@ -14,8 +14,10 @@
 
 <body>
   <%- include('partials/_header') %>
-
-    <main style="margin: 1em;">
+  <% if(!user) { %>
+    <meta http-equiv="Refresh" content="0; url='/login'" />
+    <% } %>
+    <main style="margin: 1em">
       <h3>Create TinyURL</h3>
       <form class="form-inline" action="/urls" method="POST">
         <div class="form-group mb-2">

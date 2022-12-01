@@ -43,14 +43,12 @@ const users = {
   },
 };
 //helper function loop
-const existing = function(email) {
-  let existingUser = null;
+const fetchUserByEmail = (email, users) => {
   for (const id in users) {
-    const user = users[id];
-    if (user.email === email) {
-      existingUser = user;
+    if (users[id].email === email) {
+      return users[id];
     }
-  } return existingUser;
+  } return null;
 };
 
 //register get
@@ -66,7 +64,7 @@ app.post("/register", (req, res) => {
   if (!email || !password) {
     return res.status(400).send('please provide email AND password');
   }
-  if (existing(email)) {
+  if (fetchUserByEmail(email)) {
     res.status(400).send('email is already registered');
   }
   const regId = generateRandomString();
@@ -85,17 +83,17 @@ app.get("/login", (req, res) => {
 app.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
+  const user = fetchUserByEmail(email, users);
   if (!email || !password) {
     return res.status(400).send('please provide an email AND a password');
   }
-  if (!existing(email)) {
+  if (!user) {
     return res.status(403).send('email is not yet registered');
   }
-  if (password !== existing(email).password) {
+  if (password !== user.password) {
     return res.status(403).send('incorrect password');
   }
-
-  res.cookie('user_id', req.body.user_id);
+  res.cookie('user_id', user.id);
   res.redirect('/urls');
 });
 
@@ -113,8 +111,11 @@ app.get("/urls", (req, res) => {
 
 //url shortener index
 app.get("/u/:id", (req, res) => {
-  const longURL = urlDatabase[req.params.id];
-  res.redirect(longURL);
+  if (!urlDatabase[req.params.id]) {
+  res.status(404).send('invalid short id. link is not currently active');
+}
+const longURL = urlDatabase[req.params.id];
+res.redirect(longURL);
 });
 
 //create new url
@@ -141,21 +142,33 @@ app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
-//create a new url submission
+//create a new url (post /urls)
 app.post("/urls", (req, res) => {
+  const user = users[req.cookies.user_id];
+  if (!user) {
+    return res.status(401).send('Please login to use this feature');
+  }
   const newId = generateRandomString();
   urlDatabase[newId] = `http://${req.body.longURL}`;
-
-  res.redirect(`/urls/${newId}`); // Respond with 'Ok' (we will replace this)
+  res.redirect(`/urls/${newId}`);
 });
 
 //delete url from database
 app.post("/urls/:id/delete", (req, res) => {
+  const user = users[req.cookies.user_id];
+  if (!user) {
+    return res.status(401).send('Please login to use this feature');
+  }
   delete urlDatabase[req.params.id];
   res.redirect("/urls");
 });
 //update url from database
 app.post("/urls/:id/edit", (req, res) => {
+  const user = users[req.cookies.user_id];
+  if (!user) {
+    return res.status(401).send('Please login to use this feature');
+  }
+
   urlDatabase[req.params.id] = req.body.longURL;
   res.redirect("/urls");
 });
@@ -165,3 +178,4 @@ app.post("/urls/:id/edit", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
+
