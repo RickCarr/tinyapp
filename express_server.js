@@ -2,6 +2,7 @@
 const express = require('express');
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
+const bcrypt = require('bcryptjs');
 
 const app = express();
 const PORT = 8080;
@@ -44,12 +45,12 @@ const users = {
   userRandomID: {
     id: "userRandomID",
     email: "user@example.com",
-    password: "purple-monkey-dinosaur",
+    password: bcrypt.hashSync("asdf", 10),
   },
   user2RandomID: {
     id: "user2RandomID",
     email: "user2@example.com",
-    password: "dishwasher-funk",
+    password: bcrypt.hashSync("dishwasher-funk", 10),
   },
 };
 //helper function loop
@@ -92,7 +93,8 @@ app.post("/register", (req, res) => {
     res.status(400).send('email is already registered');
   }
   const regId = generateRandomString();
-  users[regId] = { id: regId, email, password };
+  users[regId] = { id: regId, email, password : bcrypt.hashSync(password, 10) };
+  console.log(users[regId]);
   res.cookie("user_id", regId);
   res.redirect('/urls');
 });
@@ -114,9 +116,10 @@ app.post("/login", (req, res) => {
   if (!user) {
     return res.status(403).send('email is not yet registered');
   }
-  if (password !== user.password) {
+  if (!bcrypt.compareSync(req.body.password, user.password)) {
     return res.status(403).send('incorrect password');
-  }
+  } 
+  console.log(user);
   res.cookie('user_id', user.id);
   res.redirect('/urls');
 });
