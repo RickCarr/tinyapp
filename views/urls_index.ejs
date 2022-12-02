@@ -29,9 +29,8 @@
                 <a target= '_blank' href ='/u/<%= id %>'><%= id %></a>
               </td>
               <td>
-                <%= urls[id] %>
+                <%= urls[id].longURL %>
               </td>
-              <!-- <td><a href="/urls/<%= id %>" class="btn btn-primary">Edit</a></td> -->
               <td>
                 <form method="GET" action="/urls/<%= id %>"><button>Edit</button></form>
               </td>

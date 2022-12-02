@@ -25,9 +25,19 @@ const generateRandomString = function() {
   }
   return randomChars;
 };
+// const urlDatabase = {
+//   "b2xVn2": "http://www.lighthouselabs.ca",
+//   "9sm5xK": "http://www.google.com"
+// };
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  b6UTxQ: {
+    longURL: "https://www.tsn.ca",
+    userID: "aJ48lW",
+  },
+  i3BoGr: {
+    longURL: "https://www.google.ca",
+    userID: "aJ48lW",
+  },
 };
 
 const users = {
@@ -50,6 +60,20 @@ const fetchUserByEmail = (email, users) => {
     }
   } return null;
 };
+//helper db loop requires:
+// const email = req.body.email;
+//   const user = fetchUserByEmail(email, users);
+const fetchUrlsByUser = (user) => {
+  let userUrls = {};
+  for (const key in urlDatabase) {
+    if (urlDatabase[key].userID === user.id) {
+      userUrls[key] = urlDatabase[key];
+    }
+  }
+  return userUrls;
+};
+
+
 
 //register get
 app.get("/register", (req, res) => {
@@ -103,19 +127,34 @@ app.post("/logout", (req, res) => {
   res.clearCookie("user_id");
   res.redirect("/login");
 });
-
+// get urls
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase, user: users[req.cookies.user_id] };
+  const user = users[req.cookies.user_id];
+  if (!user) {
+    return res.status(401).send('Please <a href= "/login"> login </a> to use this feature');
+  }
+  const templateVars = { urls: fetchUrlsByUser(user), user: users[req.cookies.user_id] };
   res.render("urls_index", templateVars);
+});
+
+//create a new url (post /urls)
+app.post("/urls", (req, res) => {
+  const user = users[req.cookies.user_id];
+  if (!user) {
+    return res.status(401).send('Please login to use this feature');
+  }
+  const newId = generateRandomString();
+  urlDatabase[newId] = { longURL: `http://${req.body.longURL}`, userID: user.id };
+  res.redirect(`/urls/${newId}`);
 });
 
 //url shortener index
 app.get("/u/:id", (req, res) => {
   if (!urlDatabase[req.params.id]) {
-  res.status(404).send('invalid short id. link is not currently active');
-}
-const longURL = urlDatabase[req.params.id];
-res.redirect(longURL);
+    res.status(404).send('invalid short id. link is not currently active');
+  }
+  const longURL = urlDatabase[req.params.id].longURL;
+  res.redirect(longURL);
 });
 
 //create new url
@@ -124,11 +163,6 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new", templateVars);
 });
 
-//page by id
-app.get("/urls/:id", (req, res) => {
-  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id], user: users[req.cookies.user_id] };
-  res.render("urls_show", templateVars);
-});
 
 app.get("/", (req, res) => {
   res.redirect("/urls");
@@ -142,37 +176,45 @@ app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
-//create a new url (post /urls)
-app.post("/urls", (req, res) => {
-  const user = users[req.cookies.user_id];
-  if (!user) {
-    return res.status(401).send('Please login to use this feature');
-  }
-  const newId = generateRandomString();
-  urlDatabase[newId] = `http://${req.body.longURL}`;
-  res.redirect(`/urls/${newId}`);
-});
 
 //delete url from database
 app.post("/urls/:id/delete", (req, res) => {
   const user = users[req.cookies.user_id];
+  const short = req.params.id;
   if (!user) {
     return res.status(401).send('Please login to use this feature');
+  }
+  if (!urlDatabase[short]) {
+    return res.status(404).send('this short URL is not in the database');
+  }
+  if (!fetchUrlsByUser(user)[short]) {
+    return res.status(401).send('You can only delete your own URLs');
   }
   delete urlDatabase[req.params.id];
   res.redirect("/urls");
 });
-//update url from database
+//post update url from database
 app.post("/urls/:id/edit", (req, res) => {
   const user = users[req.cookies.user_id];
+  const short = req.params.id;
   if (!user) {
     return res.status(401).send('Please login to use this feature');
   }
-
-  urlDatabase[req.params.id] = req.body.longURL;
+  if (!fetchUrlsByUser(user)[short]) {
+    return res.status(401).send('You can only edit your own URLs');
+  }
+  urlDatabase[req.params.id].longURL = req.body.longURL;
   res.redirect("/urls");
 });
 
+//get page by id
+app.get("/urls/:id", (req, res) => {
+  if (!urlDatabase[req.params.id]) {
+    return res.status(400).send('This short URL is not active.');
+  }
+  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id].longURL, user: users[req.cookies.user_id] };
+  res.render("urls_show", templateVars);
+});
 
 //listen port
 app.listen(PORT, () => {
