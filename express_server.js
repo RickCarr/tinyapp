@@ -3,7 +3,8 @@ const express = require('express');
 const morgan = require('morgan');
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
-const { fetchUrlsByUser, fetchUserByEmail } = require('./helpers');
+const { fetchUrlsByUser, fetchUserByEmail, generateRandomString } = require('./helpers');
+const { urlDatabase, users } = require('./databases');
 
 
 const app = express();
@@ -22,44 +23,10 @@ app.use(cookieSession({
 }));
 app.use(express.urlencoded({ extended: true }));
 
-//consts
-const generateRandomString = function() {
-  let randomChars = "";
-  const alphaNum = "1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  for (let i = 0; i <= 5; i++) {
-    //62 characters in the alphanumeric possibilities including capitalized letters
-    randomChars += alphaNum.charAt(Math.floor(Math.random() * 62));
-  }
-  return randomChars;
-};
-const urlDatabase = {
-  b6UTxQ: {
-    longURL: "https://www.tsn.ca",
-    userID: "userRandomID",
-  },
-  i3BoGr: {
-    longURL: "https://www.google.ca",
-    userID: "aJ48lW",
-  },
-};
-
-const users = {
-  userRandomID: {
-    id: "userRandomID",
-    email: "user@example.com",
-    password: bcrypt.hashSync("asdf", 10),
-  },
-  user2RandomID: {
-    id: "user2RandomID",
-    email: "user2@example.com",
-    password: bcrypt.hashSync("dishwasher-funk", 10),
-  },
-};
-
 //register get
 app.get("/register", (req, res) => {
   const templateVars = { user: users[req.session.user_id] };
-  res.render('register', templateVars);
+  (users[req.session.user_id]) ? res.redirect('/urls') : res.render('register', templateVars);
 });
 
 //register post
@@ -74,7 +41,6 @@ app.post("/register", (req, res) => {
   }
   const regId = generateRandomString();
   users[regId] = { id: regId, email, password: bcrypt.hashSync(password, 10) };
-  console.log(users[regId]);
   req.session.user_id = regId;
   res.redirect('/urls');
 });
@@ -82,7 +48,7 @@ app.post("/register", (req, res) => {
 //login get
 app.get("/login", (req, res) => {
   const templateVars = { user: users[req.session.user_id] };
-  res.render('login', templateVars);
+  (users[req.session.user_id]) ? res.redirect('/urls') : res.render('login', templateVars);
 });
 
 //login post
@@ -99,7 +65,6 @@ app.post("/login", (req, res) => {
   if (!bcrypt.compareSync(req.body.password, user.password)) {
     return res.status(403).send('incorrect password');
   }
-  console.log(user);
   req.session.user_id = user.id;
   res.redirect('/urls');
 });
@@ -137,17 +102,14 @@ app.post("/urls", (req, res) => {
   }
   const newId = generateRandomString();
   urlDatabase[newId] = { longURL: req.body.longURL, userID: user.id };
-  console.log(urlDatabase);
   res.redirect(`/urls/${newId}`);
 });
-
 
 //create new url
 app.get("/urls/new", (req, res) => {
   const templateVars = { user: users[req.session.user_id] };
   res.render("urls_new", templateVars);
 });
-
 
 app.get("/", (req, res) => {
   res.redirect("/login");
@@ -160,7 +122,6 @@ app.get("/hello", (req, res) => {
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
-
 
 //delete url from database
 app.post("/urls/:id/delete", (req, res) => {
@@ -211,6 +172,5 @@ app.get("/urls/:id", (req, res) => {
 
 //listen port
 app.listen(PORT, () => {
-  console.log(`tinyApp listening on port ${PORT}!`);
 });
 

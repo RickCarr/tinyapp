@@ -16,4 +16,14 @@ const fetchUrlsByUser = (user, urlDatabase) => {
   }
   return userUrls;
 };
-module.exports = { fetchUrlsByUser, fetchUserByEmail };
+//helper random string generator
+const generateRandomString = function() {
+  let randomChars = "";
+  const alphaNum = "1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  for (let i = 0; i <= 5; i++) {
+    //62 characters in the alphanumeric possibilities including capitalized letters
+    randomChars += alphaNum.charAt(Math.floor(Math.random() * 62));
+  }
+  return randomChars;
+};
+module.exports = { fetchUrlsByUser, fetchUserByEmail, generateRandomString };

@@ -11,9 +11,6 @@
 
 <body>
   <%- include('partials/_header') %>
-  <% if(user) { %>
-    <meta http-equiv="Refresh" content="0; url='/urls'" />
-    <% } %>
     <main style="margin: 1em">
       <h3>Create Account</h3>
       <form method='POST' action='/register'>
